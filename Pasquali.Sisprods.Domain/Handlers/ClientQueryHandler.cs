@@ -43,7 +43,7 @@ namespace Pasquali.Sisprods.Domain.Handlers
             //eu ia fazer um if(_INVALIDATE_CACHE) Cache.Del antes aqui
             //mas descobri que nao precisa ele atualiza o valor dada a mesma chave
             //isso eh tecnologia pura :)
-            if (cached == null || INVALIDATE_ALL_CACHE)
+            if ((clients != null) && (cached == null || INVALIDATE_ALL_CACHE))
                 _cacheRepository.Bind<IEnumerable<Client>>(clients, "Clients");
 
             INVALIDATE_ALL_CACHE = false;
@@ -74,7 +74,7 @@ namespace Pasquali.Sisprods.Domain.Handlers
                 INVALIDATE_ALL_CACHE = true; //invalida cache pra listas
             }                
 
-            if (cached == null || INVALIDATE_ONE_CACHE)
+            if ((client != null) && (cached == null || INVALIDATE_ONE_CACHE))
                 _cacheRepository.Update(client); // cria ou atualiza no cache
 
             INVALIDATE_ONE_CACHE = false;

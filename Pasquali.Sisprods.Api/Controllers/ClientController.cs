@@ -95,22 +95,32 @@ namespace Pasquali.Sisprods.Api.Controllers
         [ResponseType(typeof(GenericCommandResult))]
         public IHttpActionResult PostClient([FromBody] CreateClientCommand command)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || command == null)
                 return BadRequest(ModelState);
 
-            var result = (GenericCommandResult)_handlerCommand.Handle(command);
+            try
+            {
+                var result = (GenericCommandResult)_handlerCommand.Handle(command);
 
-            if (!result.Success)
-                return Content(HttpStatusCode.BadRequest, result.Data);
+                if (!result.Success)
+                    return Content(HttpStatusCode.BadRequest, result.Data);
 
-            return Ok(result);
+                //var query = (GenericQueryResult<Client>)_handlerQuery.Handle(new ClientGetByIdQuery(result.Data.Id));
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+
         }
 
         // DELETE: api/Client/5
         [ResponseType(typeof(GenericCommandResult))]
         public IHttpActionResult DeleteClient([FromUri] int id, [FromBody] DeleteClientCommand command)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || command == null)
                 return BadRequest(ModelState);
 
             if (id != command.Id)
@@ -123,11 +133,13 @@ namespace Pasquali.Sisprods.Api.Controllers
                 if (!result.Success)
                     return Content(HttpStatusCode.BadRequest, result.Data);
 
+                var query = (GenericQueryResult<Client>)_handlerQuery.Handle(new ClientGetByIdQuery(id));
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                if (!ClientExists(id))
+                if (ClientExists(id))
                 {
                     return NotFound();
                 }
@@ -139,19 +151,13 @@ namespace Pasquali.Sisprods.Api.Controllers
             }
         }
 
-        private bool ClientExists(int id)
-        {
-            var clientExists = _repository.GetById(id);
-            return (clientExists != null || clientExists.ClientId > 0);
-        }
-
         // PUT: api/Client/5
         [Route("{id}/products")]
         [HttpPut]
         [ResponseType(typeof(GenericCommandResult))]
         public IHttpActionResult PutClientProducts([FromUri] int id, [FromBody] AddProductsClientCommand command)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || command == null)
                 return BadRequest(ModelState);
 
             if (id != command.ClientId)
@@ -174,6 +180,13 @@ namespace Pasquali.Sisprods.Api.Controllers
                 return InternalServerError(ex);
                 //return StatusCode(HttpStatusCode.InternalServerError);
             }
+        }
+
+
+        private bool ClientExists(int id)
+        {
+            var clientExists = (GenericQueryResult<Client>)_handlerQuery.Handle(new ClientGetByIdQuery(id));
+            return (clientExists != null || clientExists.Entity.ClientId > 0);
         }
     }
 }

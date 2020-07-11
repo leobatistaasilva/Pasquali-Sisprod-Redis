@@ -25,7 +25,10 @@ namespace Pasquali.Sisprods.Domain.Handlers
         }
 
         public ICommandResult Handle(CreateClientCommand command)
-        {           
+        {
+            if (command == null)
+                return new GenericCommandResult(false, _genericErrorText, null);
+
             command.Validate();
             if (command.Invalid)
                 return new GenericCommandResult(false, _genericErrorText, command.Notifications);
@@ -44,6 +47,9 @@ namespace Pasquali.Sisprods.Domain.Handlers
 
         public ICommandResult Handle(UpdateClientCommand command)
         {
+            if (command == null)
+                return new GenericCommandResult(false, _genericErrorText, null);
+
             command.Validate();
             if (command.Invalid)
                 return new GenericCommandResult(false, _genericErrorText, command.Notifications);
@@ -66,6 +72,9 @@ namespace Pasquali.Sisprods.Domain.Handlers
 
         public ICommandResult Handle(DeleteClientCommand command)
         {
+            if (command == null)
+                return new GenericCommandResult(false, _genericErrorText, null);
+
             command.Validate();
             if (command.Invalid)
                 return new GenericCommandResult(false, _genericErrorText, command.Notifications);
@@ -85,6 +94,9 @@ namespace Pasquali.Sisprods.Domain.Handlers
 
         public ICommandResult Handle(AddProductsClientCommand command)
         {
+            if (command == null)
+                return new GenericCommandResult(false, _genericErrorText, null);
+
             command.Validate();
             if (command.Invalid)
                 return new GenericCommandResult(false, _genericErrorText, command.Notifications);
