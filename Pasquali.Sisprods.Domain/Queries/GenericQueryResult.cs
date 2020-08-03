@@ -1,6 +1,7 @@
 using Pasquali.Sisprods.Domain.Queries.Contracts;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Pasquali.Sisprods.Domain.Commands
 {
@@ -22,5 +23,10 @@ namespace Pasquali.Sisprods.Domain.Commands
         public object Data { get; set; }
         public T Entity { get; set; }
         public IEnumerable<T> Entities { get; set; }
+
+        public static explicit operator GenericQueryResult<T>(Task<IQueryResult> v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

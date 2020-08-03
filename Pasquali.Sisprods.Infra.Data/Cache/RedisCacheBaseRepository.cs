@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Pasquali.Sisprods.Infra.Data.Cache
 {
-    public class RedisCacheBase
+    public class RedisCacheBaseRepository
     {
 
 

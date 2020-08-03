@@ -1,4 +1,9 @@
-﻿using Pasquali.Sisprods.Domain.Handlers;
+﻿using MediatR;
+using Pasquali.Sisprods.Domain.Commands;
+using Pasquali.Sisprods.Domain.Commands.Contracts;
+using Pasquali.Sisprods.Domain.Handlers;
+using Pasquali.Sisprods.Domain.Queries;
+using Pasquali.Sisprods.Domain.Queries.Contracts;
 using Pasquali.Sisprods.Domain.Repositories;
 using Pasquali.Sisprods.Infra.Data.Cache;
 using Pasquali.Sisprods.Infra.Data.Contexts;
@@ -7,6 +12,7 @@ using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Unity;
@@ -43,23 +49,76 @@ namespace Pasquali.Sisprods.Infra.IoC
             // NOTE: To load from web.config uncomment the line below. Make sure to add a Microsoft.Practices.Unity.Configuration to the using statements.
             // container.LoadConfiguration();
 
-            //Databases
+            //container.RegisterType<IMediator>(new InjectionFactory(x => new Mediator(() => new UnityServiceLocator(x))));
+            
+            container.RegisterType<IMediator, Mediator>(new PerThreadLifetimeManager())
+                    .RegisterInstance<ServiceFactory>(type =>
+                    {
+                        var enumerableType = type
+                            .GetInterfaces()
+                            .Concat(new[] { type })
+                            .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+                        return enumerableType != null
+                            ? container.ResolveAll(enumerableType.GetGenericArguments()[0])
+                            : container.IsRegistered(type)
+                                ? container.Resolve(type)
+                                : null;
+                    });
+
+
+
+            //container.RegisterType(typeof(CartQueryHandler)).
+            //    .As<IRequestHandler<CartGetAllQuery, IQueryResult>>()
+            //    .AsImplementedInterfaces();
+
+            //var assembly = Assembly.GetAssembly(typeof(Handler));
+            //var assembly = AppDomain.CurrentDomain.Load("");
+            //services.AddMediatR(assembly);
+
+            //container.RegisterType<IMediator, Mediator>(new PerThreadLifetimeManager())
+            //        .RegisterInstance<ServiceFactory>(type =>
+            //        {
+            //            var assembly = Assembly.GetAssembly(typeof(Handler));
+
+            //            //var enumerableType = type
+            //            //    .GetInterfaces()
+            //            //    .Concat(new[] { type })
+            //            //    .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+            //            return assembly != null
+            //                ? container.ResolveAll(assembly.GetType())
+            //                : container.IsRegistered(assembly.GetType())
+            //                    ? container.Resolve(assembly.GetType())
+            //                    : null;
+            //        });
+
+            container.RegisterType<IRequestHandler<CartGetAllQuery, IQueryResult>, CartQueryHandler>();
+            container.RegisterType<IRequestHandler<CreateCartCommand, ICommandResult>, CartCommandHandler>();
+
+            //Databases sql server
             container.RegisterType<SisprodsContext, SisprodsContext>();
+            //Databases redis
             container.RegisterSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
             container.RegisterType<IDatabase>(
                 new PerThreadLifetimeManager(),
                 new InjectionFactory(c => new RedisConnectionFactory().Connection().GetDatabase()
             ));
 
-            //Repositories
+            //Repositories sql
             container.RegisterType<IProductRepository, ProductRepository>();
             container.RegisterType<IClientRepository, ClientRepository>();            
+            container.RegisterType<ICartRepository, CartRepository>();
+            //Repositories cache
             container.RegisterType<IProductRepository, ProductCacheRepository>();
             container.RegisterType<IClientRepository, ClientCacheRepository>("ClientCacheRepository");
+            container.RegisterType<ICartRepository, CartCacheRepository>("CartCacheRepository");
 
-            //Handlers
+            //Handlers commands
             container.RegisterType<ProductCommandHandler, ProductCommandHandler>();
             container.RegisterType<ClientCommandHandler, ClientCommandHandler>();            
+            container.RegisterType<CartCommandHandler, CartCommandHandler>();
+            //Handlers queries
             container.RegisterType<ProductQueryHandler, ProductQueryHandler>();
             //container.RegisterType<ClientQueryHandler, ClientQueryHandler>();
             container.RegisterType<ClientQueryHandler>(new InjectionFactory(c =>
@@ -67,6 +126,12 @@ namespace Pasquali.Sisprods.Infra.IoC
                 var repository = new ClientRepository(new SisprodsContext());
                 var cacheRepository = new ClientCacheRepository(new RedisConnectionFactory().Connection().GetDatabase());
                 return new ClientQueryHandler(repository, cacheRepository);
+            }));
+            container.RegisterType<CartQueryHandler>(new InjectionFactory(c =>
+            {
+                var repository = new CartRepository(new SisprodsContext());
+                var cacheRepository = new CartCacheRepository(new RedisConnectionFactory().Connection().GetDatabase());
+                return new CartQueryHandler(repository, cacheRepository);
             }));
 
             //container.RegisterType<ClientQueryHandler>(new InjectionConstructor(

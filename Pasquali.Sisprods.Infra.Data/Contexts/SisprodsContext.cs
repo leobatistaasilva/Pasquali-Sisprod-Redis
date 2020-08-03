@@ -25,6 +25,7 @@ namespace Pasquali.Sisprods.Infra.Data.Contexts
 
             modelBuilder.Entity<Client>();
             modelBuilder.Entity<Product>();
+            modelBuilder.Entity<Cart>();
 
             //modelBuilder.Configurations.Add(new ClientMap());
 
@@ -37,5 +38,6 @@ namespace Pasquali.Sisprods.Infra.Data.Contexts
 
         public DbSet<Client> Clients { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Cart> Carts { get; set; }
     }
 }

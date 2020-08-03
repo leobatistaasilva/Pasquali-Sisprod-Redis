@@ -44,6 +44,8 @@ namespace Pasquali.Sisprods.Api.Controllers
             return Ok(query.Entity);
         }
 
+
+
         // GET: api/Client/5
         [ResponseType(typeof(Client))]
         public IHttpActionResult GetClient(int id)

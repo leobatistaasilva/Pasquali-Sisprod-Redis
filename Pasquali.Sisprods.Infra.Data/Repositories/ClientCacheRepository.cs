@@ -12,7 +12,7 @@ using Pasquali.Sisprods.Infra.Data.Cache;
 
 namespace Pasquali.Sisprods.Infra.Data.Repositories
 {
-    public class ClientCacheRepository : RedisCacheBase, IClientRepository
+    public class ClientCacheRepository : RedisCacheBaseRepository, IClientRepository
     {
         private readonly IDatabase _cacheDB;
 
